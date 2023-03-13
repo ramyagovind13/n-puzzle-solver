@@ -86,7 +86,7 @@ def get_astar_misplaced_tiles_average_steps_position():
     return 0, 2
 
 def astar_algorithm(puzzle_board, heuristic_function_type, get_average_steps_position):
-    # Solving puzzle using Best first search Euclidean distance heuristics
+    # Solving puzzle using a star  Euclidean distance heuristics
     print(f"\nSolving puzzle using astar {heuristic_function_type.__name__} heuristics:")
     res_path, count = puzzle_board.astar(heuristic_function_type)
     row, col = get_average_steps_position()
