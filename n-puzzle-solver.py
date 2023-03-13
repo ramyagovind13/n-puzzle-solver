@@ -5,6 +5,7 @@
 #   3. Number of misplaced tiles
 
 
+from enum import Enum
 import math
 
 # Initialize goal state of the puzzle
@@ -19,6 +20,9 @@ max_move_limit = 1500
 # in the path over different trials
 average_steps = [[0, 0, 0],
                  [0, 0, 0]]
+class SearchAlgorithm(Enum):
+    ASTAR = "a_star"
+    BFS = "best_first_search"
 
 def get_index(i, inp):
     if i in inp:
@@ -60,6 +64,10 @@ def misplaced_tiles(puzzle_board):
     return heuristic_function(puzzle_board,
                      lambda row, goal_row, col, goal_col: get_no_of_misplaced_tiles_count(puzzle_board),
                      lambda target: target)
+class HeuristicFunction(Enum):
+    EUCLIDEAN_DISTANCE = euclidean_distance
+    MANHATTAN_DISTANCE = manhattan_distance
+    MISPLACED_TILES = misplaced_tiles
 
 def get_no_of_misplaced_tiles_count(puzzle_board):
     # Get number of misplaced tiles count
@@ -70,18 +78,29 @@ def get_no_of_misplaced_tiles_count(puzzle_board):
                 count = count + 1
     return count
 
-def best_first_search_euclidean_distance(puzzle_board):
-    # Solving puzzle using Best first search Euclidean distance heuristics
-    print("\nSolving puzzle using Best first search Euclidean distance heuristics:")
-    res_path, count = puzzle_board.best_first_search(euclidean_distance)
+def get_astar_manhattan_distance_average_steps_position():
+          return 0, 0
+def get_astar_euclidean_distance_average_steps_position():
+    return 0, 1
+def get_astar_misplaced_tiles_average_steps_position():
+    return 0, 2
+
+def astar_algorithm(puzzle_board, heuristic_function_type, get_average_steps_position):
+    # Solving puzzle using a star  Euclidean distance heuristics
+    print(f"\nSolving puzzle using astar {heuristic_function_type.__name__} heuristics:")
+    res_path, count = puzzle_board.astar(heuristic_function_type)
+    row, col = get_average_steps_position()
     if res_path:
         res_path.reverse()
         for i in res_path:
             print(i.dup_matrix)
-        average_steps[0][1] = average_steps[0][1] + len(res_path)
-        print(f"\nNo.of steps euclidean distance took for best first algorithm is {len(res_path)}")
+        average_steps[0][2] = average_steps[0][2] + len(res_path)
+        print(f"\nNo.of steps misplaced tiles took for astar algorithm is {len(res_path)}")
+        average_steps[row][col] = average_steps[row][col] + len(res_path)
+        print(f"\nNo.of steps {heuristic_function_type.__name__} took for astar algorithm  is {len(res_path)}")
     else:
         print(f"Searching stopped after traversing {count-1} solution paths")
+
 
 def best_first_search_manhattan_distance(puzzle_board):
     # Solving puzzle using Best first search Manhattan distance heuristics
@@ -121,6 +140,8 @@ def astar_euclidean_distance(puzzle_board):
         print(f"\nNo.of steps euclidean distance took for A* algorithm is {len(res_path)}")
     else:
         print(f"Searching stopped after traversing {count-1} solution paths")
+        def get_astar_manhattan_distance_average_steps_position():
+            return 0, 0
 
 def astar_manhattan_distance(puzzle_board):
     # Solving puzzle using Astar Manhattan distance heuristics
@@ -375,14 +396,18 @@ if __name__ == "__main__":
     puzzle_board = PuzzleBoardProblem()
     puzzle_board.set_matrix(inital_puzzle_conf)
     astar_euclidean_distance(puzzle_board)
+    astar_algorithm(puzzle_board, HeuristicFunction.EUCLIDEAN_DISTANCE,
+    get_astar_euclidean_distance_average_steps_position)
     print("A* search Euclidean distance average count: ", average_steps[1][1] / 5)
 
     puzzle_board = PuzzleBoardProblem()
     puzzle_board.set_matrix(inital_puzzle_conf)
-    astar_manhattan_distance(puzzle_board)
+    astar_algorithm(puzzle_board, HeuristicFunction.MANHATTAN_DISTANCE,
+     get_astar_manhattan_distance_average_steps_position)
     print("A* search Manhattan distance averaege count: ", average_steps[1][0] / 5)
 
     puzzle_board = PuzzleBoardProblem()
     puzzle_board.set_matrix(inital_puzzle_conf)
-    astar_misplaced_tiles(puzzle_board)
+    astar_algorithm(puzzle_board, HeuristicFunction.MISPLACED_TILES,
+     get_astar_misplaced_tiles_average_steps_position)
     print("A* search number of Misplaced tiles average count: ", average_steps[1][2] / 5)
