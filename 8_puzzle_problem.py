@@ -12,12 +12,12 @@ from n_puzzle_solver import (PuzzleBoardProblem,
 class EightPuzzleProblem(PuzzleBoardProblem):
     
     def __init__(self):
-        self.n = 3
+        self.grid = 3
         self.puzzle_goal_state = [[1, 2, 3],
                                   [4, 5, 6],
                                   [7, 8, 0]]
         
-        super().__init__(self.n, self.puzzle_goal_state)
+        super().__init__(self.grid, self.puzzle_goal_state)
     
 
 if __name__ == "__main__":

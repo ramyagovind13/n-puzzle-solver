@@ -31,12 +31,12 @@ def get_astar_misplaced_tiles_average_steps_position():
 
 class PuzzleBoardProblem:
 
-    def __init__(self, n, puzzle_goal_state):
+    def __init__(self, grid, puzzle_goal_state):
         self.intial_node = None
         self.dup_matrix = []
         self.heuristic_value = 0
         self.depth = 0
-        self.n = n
+        self.grid = grid
         self.puzzle_goal_state = puzzle_goal_state
         self.set_average_steps()
         self.set_dup_matrix()
@@ -51,7 +51,7 @@ class PuzzleBoardProblem:
     def __str__(self):
         # Covert the coned matrix into string representation
         result = ''
-        for r in range(self.n):
+        for r in range(self.grid):
             result += ' '.join(map(str, self.dup_matrix[r]))
             result += '\r\n'
         return result
@@ -61,14 +61,14 @@ class PuzzleBoardProblem:
                               [0, 0, 0]]
 
     def set_dup_matrix(self):
-        for i in range(self.n):
+        for i in range(self.grid):
             self.dup_matrix.append(self.puzzle_goal_state[i][:])
 
     def set_matrix(self, values):
         # initialize matrix with the given matrix
         i = 0
-        for row in range(self.n):
-            for col in range(self.n):
+        for row in range(self.grid):
+            for col in range(self.grid):
                 self.dup_matrix[row][col] = int(values[i])
                 i = i + 1
 
@@ -91,15 +91,15 @@ class PuzzleBoardProblem:
         # Return the row and col of the given value
         if val < 0 or val > 8:
             raise Exception("Given value is out of range. Should be between 0 and 8")
-        for r in range(self.n):
-            for c in range(self.n):
+        for r in range(self.grid):
+            for c in range(self.grid):
                 if self.dup_matrix[r][c] == val:
                     return r, c
         
     def deep_copy_matrix(self):
         # Deep copy matrix
-        pb = PuzzleBoardProblem(self.n, self.puzzle_goal_state)
-        for r in range(self.n):
+        pb = PuzzleBoardProblem(self.grid, self.puzzle_goal_state)
+        for r in range(self.grid):
             pb.dup_matrix[r] = self.dup_matrix[r][:]
         return pb
 
@@ -112,9 +112,9 @@ class PuzzleBoardProblem:
             possible_move_matrix.append((r - 1, c))
         if c > 0:
             possible_move_matrix.append((r, c - 1))
-        if r < self.n -1:
+        if r < self.grid -1:
             possible_move_matrix.append((r + 1, c))
-        if c < self.n -1:
+        if c < self.grid -1:
             possible_move_matrix.append((r, c + 1))
         return possible_move_matrix
 
@@ -274,13 +274,13 @@ class PuzzleBoardProblem:
     def heuristic_function(self, item_tot_cost, total_cost):
         # estimate the cost of reaching a goal state from a given state
         tot = 0
-        for row in range(self.n):
-            for col in range(self.n):
+        for row in range(self.grid):
+            for col in range(self.grid):
                 val = self.get_value(row, col) - 1
-                goal_row = val / self.n
-                goal_col = val % self.n
+                goal_row = val / self.grid
+                goal_col = val % self.grid
                 if goal_row < 0:
-                    goal_row = self.n - 1
+                    goal_row = self.grid - 1
                 tot += item_tot_cost(row, goal_row, col, goal_col)
         return total_cost(tot)
 
