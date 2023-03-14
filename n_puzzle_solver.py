@@ -10,63 +10,7 @@ import math
 
 # Set maximum nuber of move limit
 max_move_limit = 1500
-
-def get_index(i, inp):
-    if i in inp:
-        return inp.index(i)
-    else:
-        return -1
-
-def heuristic_function(
-    puzzle_board, item_tot_cost, total_cost):
-    # estimate the cost of reaching a goal state from a given state
-    tot = 0
-    for row in range(3):
-        for col in range(3):
-            val = puzzle_board.get_value(row, col) - 1
-            goal_row = val / 3
-            goal_col = val % 3
-            if goal_row < 0:
-                goal_row = 2
-            tot += item_tot_cost(row, goal_row, col, goal_col)
-    return total_cost(tot)
-
-def euclidean_distance(puzzle_board, puzzle_goal_state):
-    # measures the straight-line distance between two points in a Euclidean space
-    return heuristic_function(puzzle_board,
-                     lambda row, goal_row, col, goal_col: math.sqrt(
-                        (goal_row - row) ** 2 + (goal_col - col) ** 2),
-                     lambda target: target)
-
-def manhattan_distance(puzzle_board, puzzle_goal_state):
-    # measures the absolute difference between the coordinates
-    # of two points in a grid-based system
-    return heuristic_function(puzzle_board,
-                     lambda row, goal_row, col, goal_col: abs(goal_row - row) + abs(goal_col - col),
-                     lambda target: target)
-
-def misplaced_tiles(puzzle_board, puzzle_goal_state):
-    # measures the number of tiles that are in the wrong position 
-    # in the current state compared to the goal state.
-    return heuristic_function(puzzle_board,
-                     lambda row, goal_row, col, goal_col: get_no_of_misplaced_tiles_count(puzzle_board, puzzle_goal_state),
-                     lambda target: target)
     
-class HeuristicFunction(Enum):
-    EUCLIDEAN_DISTANCE = euclidean_distance
-    MANHATTAN_DISTANCE = manhattan_distance
-    MISPLACED_TILES = misplaced_tiles
-
-def get_no_of_misplaced_tiles_count(puzzle_board, puzzle_goal_state):
-    # Get number of misplaced tiles count
-    count = 0
-    for row in range(3):
-        for col in range(3):
-            if puzzle_board.get_value(row, col) != puzzle_goal_state[row][col]:
-                count = count + 1
-    return count
-
-
 def get_bfs_manhattan_distance_average_steps_position():
     return 0, 0
 
@@ -77,42 +21,13 @@ def get_bfs_misplaced_tiles_average_steps_position():
     return 0, 2
 
 def get_astar_manhattan_distance_average_steps_position():
-    return 0, 0
+    return 1, 0
 
 def get_astar_euclidean_distance_average_steps_position():
-    return 0, 1
+    return 1, 1
 
 def get_astar_misplaced_tiles_average_steps_position():
-    return 0, 2
-
-def best_first_search_algorithm(puzzle_board, heuristic_function_type, get_average_steps_position, average_steps):
-    # Solving puzzle using Best first search
-    print(f"\nSolving puzzle using Best first search {heuristic_function_type.__name__} heuristics:")
-    res_path, count = puzzle_board.best_first_search(heuristic_function_type)
-    row, col = get_average_steps_position()
-    if res_path:
-        res_path.reverse()
-        for i in res_path:
-            print(i.dup_matrix)
-        average_steps[row][col] = average_steps[row][col] + len(res_path)
-        print(f"\nNo.of steps {heuristic_function_type.__name__} took for best first algorithm is {len(res_path)}")
-    else:
-        print(f"Searching stopped after traversing {count -1} solution paths")
-
-def astar_algorithm(puzzle_board, heuristic_function_type, get_average_steps_position, average_steps):
-    # Solving puzzle using A star algorithm
-    print(f"\nSolving puzzle using astar {heuristic_function_type.__name__} heuristics:")
-    res_path, count = puzzle_board.astar_search(heuristic_function_type)
-    row, col = get_average_steps_position()
-    if res_path:
-        res_path.reverse()
-        for i in res_path:
-            print(i.dup_matrix)
-        average_steps[row][col] = average_steps[row][col] + len(res_path)
-        print(f"\nNo.of steps {heuristic_function_type.__name__} took for best first algorithm is {len(res_path)}")
-    else:
-        print(f"Searching stopped after traversing {count -1} solution paths")
-
+    return 1, 2
 
 class PuzzleBoardProblem:
 
@@ -144,9 +59,6 @@ class PuzzleBoardProblem:
     def set_average_steps(self):
         self.average_steps = [[0, 0, 0],
                               [0, 0, 0]]
-    
-    def set_puzzle_goal_state(self):
-        raise NotImplementedError('abstract base class')
 
     def set_dup_matrix(self):
         for i in range(self.n):
@@ -229,6 +141,40 @@ class PuzzleBoardProblem:
             path.append(self)
             return self.intial_node.get_resultant_path(path)
     
+    def get_index(self, i, inp):
+        if i in inp:
+            return inp.index(i)
+        else:
+            return -1
+    
+    def best_first_search_algorithm(self, heuristic_function_type, get_average_steps_position):
+        # Solving puzzle using Best first search
+        print(f"\nSolving puzzle using Best first search {heuristic_function_type.__name__} heuristics:")
+        res_path, count = self.best_first_search(heuristic_function_type)
+        row, col = get_average_steps_position()
+        if res_path:
+            res_path.reverse()
+            for i in res_path:
+                print(i.dup_matrix)
+            self.average_steps[row][col] = self.average_steps[row][col] + len(res_path)
+            print(f"\nNo.of steps {heuristic_function_type.__name__} took for best first algorithm is {len(res_path)}")
+        else:
+            print(f"Searching stopped after traversing {count -1} solution paths")
+
+    def astar_algorithm(self, heuristic_function_type, get_average_steps_position):
+        # Solving puzzle using A star algorithm
+        print(f"\nSolving puzzle using astar {heuristic_function_type.__name__} heuristics:")
+        res_path, count = self.astar_search(heuristic_function_type)
+        row, col = get_average_steps_position()
+        if res_path:
+            res_path.reverse()
+            for i in res_path:
+                print(i.dup_matrix)
+            self.average_steps[row][col] = self.average_steps[row][col] + len(res_path)
+            print(f"\nNo.of steps {heuristic_function_type.__name__} took for best first algorithm is {len(res_path)}")
+        else:
+            print(f"Searching stopped after traversing {count -1} solution paths")
+
     def best_first_search(self, given_heuristic_function):
         # Best First Search implementation
         def check_is_solved(puzzle):
@@ -252,9 +198,9 @@ class PuzzleBoardProblem:
             next_possible_position = v.create_position()
             matrix_index_open = matrix_index_closed = -1
             for move in next_possible_position:
-                matrix_index_open = get_index(move, given_input_matrix)
-                matrix_index_closed = get_index(move, intermediate_matrix)
-                heuristic_value = given_heuristic_function(move, self.puzzle_goal_state)
+                matrix_index_open = self.get_index(move, given_input_matrix)
+                matrix_index_closed = self.get_index(move, intermediate_matrix)
+                heuristic_value = given_heuristic_function(move)
                 function_value = heuristic_value
 
                 if matrix_index_closed == -1 and matrix_index_open == -1:
@@ -299,9 +245,9 @@ class PuzzleBoardProblem:
             next_possible_position = v.create_position()
             matrix_index_open = matrix_index_closed = -1
             for move in next_possible_position:
-                matrix_index_open = get_index(move, given_input_matrix)
-                matrix_index_closed = get_index(move, intermediate_matrix)
-                heuristic_value = given_heuristic_function(move, self.puzzle_goal_state)
+                matrix_index_open = self.get_index(move, given_input_matrix)
+                matrix_index_closed = self.get_index(move, intermediate_matrix)
+                heuristic_value = given_heuristic_function(move)
                 function_value = heuristic_value + move.depth
 
                 if matrix_index_closed == -1 and matrix_index_open == -1:
@@ -324,4 +270,51 @@ class PuzzleBoardProblem:
             intermediate_matrix.append(v)
             given_input_matrix = sorted(given_input_matrix, key=lambda p: p.heuristic_value + p.depth)
         return [], no_of_moves
-    
+
+    def heuristic_function(self, item_tot_cost, total_cost):
+        # estimate the cost of reaching a goal state from a given state
+        tot = 0
+        for row in range(self.n):
+            for col in range(self.n):
+                val = self.get_value(row, col) - 1
+                goal_row = val / self.n
+                goal_col = val % self.n
+                if goal_row < 0:
+                    goal_row = self.n - 1
+                tot += item_tot_cost(row, goal_row, col, goal_col)
+        return total_cost(tot)
+
+    def euclidean_distance(self):
+        # measures the straight-line distance between two points in a Euclidean space
+        return self.heuristic_function(
+                        lambda row, goal_row, col, goal_col: math.sqrt(
+                            (goal_row - row) ** 2 + (goal_col - col) ** 2),
+                        lambda target: target)
+        
+    def manhattan_distance(self):
+        # measures the absolute difference between the coordinates
+        # of two points in a grid-based system
+        return self.heuristic_function(
+                        lambda row, goal_row, col, goal_col: abs(goal_row - row) + abs(goal_col - col),
+                        lambda target: target)
+
+    def misplaced_tiles(self):
+        # measures the number of tiles that are in the wrong position 
+        # in the current state compared to the goal state.
+        return self.heuristic_function(
+                        lambda row, goal_row, col, goal_col: self.get_no_of_misplaced_tiles_count(),
+                        lambda target: target)
+
+    def get_no_of_misplaced_tiles_count(self):
+        # Get number of misplaced tiles count
+        count = 0
+        for row in range(3):
+            for col in range(3):
+                if self.get_value(row, col) != self.puzzle_goal_state[row][col]:
+                    count = count + 1
+        return count
+
+class HeuristicFunction(Enum):
+    EUCLIDEAN_DISTANCE = PuzzleBoardProblem.euclidean_distance
+    MANHATTAN_DISTANCE = PuzzleBoardProblem.manhattan_distance
+    MISPLACED_TILES = PuzzleBoardProblem.misplaced_tiles
