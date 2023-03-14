@@ -8,8 +8,9 @@
 from enum import Enum
 import math
 
-# Set maximum nuber of move limit
-max_move_limit = 1500
+class SearchAlgorithm(Enum):
+    ASTAR = "A star"
+    BFS = "Best first search"
     
 def get_bfs_manhattan_distance_average_steps_position():
     return 0, 0
@@ -31,13 +32,14 @@ def get_astar_misplaced_tiles_average_steps_position():
 
 class PuzzleBoardProblem:
 
-    def __init__(self, grid, puzzle_goal_state):
+    def __init__(self, grid, puzzle_goal_state, max_move_limit):
         self.intial_node = None
         self.dup_matrix = []
         self.heuristic_value = 0
         self.depth = 0
         self.grid = grid
         self.puzzle_goal_state = puzzle_goal_state
+        self.max_move_limit = max_move_limit
         self.set_average_steps()
         self.set_dup_matrix()
 
@@ -98,7 +100,7 @@ class PuzzleBoardProblem:
         
     def deep_copy_matrix(self):
         # Deep copy matrix
-        pb = PuzzleBoardProblem(self.grid, self.puzzle_goal_state)
+        pb = PuzzleBoardProblem(self.grid, self.puzzle_goal_state, self.max_move_limit)
         for r in range(self.grid):
             pb.dup_matrix[r] = self.dup_matrix[r][:]
         return pb
@@ -146,131 +148,6 @@ class PuzzleBoardProblem:
             return inp.index(i)
         else:
             return -1
-    
-    def best_first_search_algorithm(self, heuristic_function_type, get_average_steps_position):
-        # Solving puzzle using Best first search
-        print(f"\nSolving puzzle using Best first search {heuristic_function_type.__name__} heuristics:")
-        res_path, count = self.best_first_search(heuristic_function_type)
-        row, col = get_average_steps_position()
-        if res_path:
-            res_path.reverse()
-            for i in res_path:
-                print(i.dup_matrix)
-            self.average_steps[row][col] = self.average_steps[row][col] + len(res_path)
-            print(f"\nNo.of steps {heuristic_function_type.__name__} took for best first algorithm is {len(res_path)}")
-        else:
-            print(f"Searching stopped after traversing {count -1} solution paths")
-
-    def astar_algorithm(self, heuristic_function_type, get_average_steps_position):
-        # Solving puzzle using A star algorithm
-        print(f"\nSolving puzzle using astar {heuristic_function_type.__name__} heuristics:")
-        res_path, count = self.astar_search(heuristic_function_type)
-        row, col = get_average_steps_position()
-        if res_path:
-            res_path.reverse()
-            for i in res_path:
-                print(i.dup_matrix)
-            self.average_steps[row][col] = self.average_steps[row][col] + len(res_path)
-            print(f"\nNo.of steps {heuristic_function_type.__name__} took for best first algorithm is {len(res_path)}")
-        else:
-            print(f"Searching stopped after traversing {count -1} solution paths")
-
-    def best_first_search(self, given_heuristic_function):
-        # Best First Search implementation
-        def check_is_solved(puzzle):
-            return puzzle.dup_matrix == self.puzzle_goal_state
-
-        given_input_matrix = [self]
-        intermediate_matrix = []
-        no_of_moves = 0
-        while len(given_input_matrix) > 0:
-            v = given_input_matrix.pop(0)
-            no_of_moves += 1
-
-            if no_of_moves > max_move_limit:
-                print("No solution for the given puzzle is found. Maximum move limit reached")
-                return [], no_of_moves
-            if check_is_solved(v):
-                if len(intermediate_matrix) > 0:
-                    return v.get_resultant_path([]), no_of_moves
-                else:
-                    return [v]
-            next_possible_position = v.create_position()
-            matrix_index_open = matrix_index_closed = -1
-            for move in next_possible_position:
-                matrix_index_open = self.get_index(move, given_input_matrix)
-                matrix_index_closed = self.get_index(move, intermediate_matrix)
-                heuristic_value = given_heuristic_function(move)
-                function_value = heuristic_value
-
-                if matrix_index_closed == -1 and matrix_index_open == -1:
-                    move.heuristic_value = heuristic_value
-                    given_input_matrix.append(move)
-                elif matrix_index_open > -1:
-                    copy = given_input_matrix[matrix_index_open]
-                    if function_value < copy.heuristic_value:
-                        copy.heuristic_value = heuristic_value
-                        copy.intial_node = move.intial_node
-                elif matrix_index_closed > -1:
-                    copy = intermediate_matrix[matrix_index_closed]
-                    if function_value < copy.heuristic_value:
-                        move.heuristic_value = heuristic_value
-                        intermediate_matrix.remove(copy)
-                        given_input_matrix.append(move)
-            intermediate_matrix.append(v)
-            given_input_matrix = sorted(given_input_matrix, key=lambda p: p.heuristic_value)
-        return [], no_of_moves
-
-    def astar_search(self, given_heuristic_function):
-        # A* algorithm implementation
-        def check_is_solved(puzzle):
-            return puzzle.dup_matrix == self.puzzle_goal_state
-
-        given_input_matrix = [self]
-        intermediate_matrix = []
-        no_of_moves = 0
-        while len(given_input_matrix) > 0:
-            v = given_input_matrix.pop(0)
-            no_of_moves += 1
-
-            if no_of_moves > max_move_limit:
-                print("No solution for the given puzzle is found. Maximum move limit reached")
-                return [], no_of_moves
-
-            if check_is_solved(v):
-                if len(intermediate_matrix) > 0:
-                    return v.get_resultant_path([]), no_of_moves
-                else:
-                    return [v]
-            next_possible_position = v.create_position()
-            matrix_index_open = matrix_index_closed = -1
-            for move in next_possible_position:
-                matrix_index_open = self.get_index(move, given_input_matrix)
-                matrix_index_closed = self.get_index(move, intermediate_matrix)
-                heuristic_value = given_heuristic_function(move)
-                function_value = heuristic_value + move.depth
-
-                if matrix_index_closed == -1 and matrix_index_open == -1:
-                    move.heuristic_value = heuristic_value
-                    given_input_matrix.append(move)
-                
-                elif matrix_index_open > -1:
-                    copy = given_input_matrix[matrix_index_open]
-                    if function_value < copy.heuristic_value + copy.depth:
-                        copy.heuristic_value = heuristic_value
-                        copy.intial_node = move.intial_node
-                        copy.depth = move.depth
-                
-                elif matrix_index_closed > -1:
-                    copy = intermediate_matrix[matrix_index_closed]
-                    if function_value < copy.heuristic_value + copy.depth:
-                        move.heuristic_value = heuristic_value
-                        intermediate_matrix.remove(copy)
-                        given_input_matrix.append(move)
-            intermediate_matrix.append(v)
-            given_input_matrix = sorted(given_input_matrix, key=lambda p: p.heuristic_value + p.depth)
-        return [], no_of_moves
-
     def heuristic_function(self, item_tot_cost, total_cost):
         # estimate the cost of reaching a goal state from a given state
         tot = 0
@@ -313,6 +190,73 @@ class PuzzleBoardProblem:
                 if self.get_value(row, col) != self.puzzle_goal_state[row][col]:
                     count = count + 1
         return count
+    
+    def solve_puzzle(self, algorithm, heuristic_function_type, get_average_steps_position):
+        # Solving puzzle using Best first search
+        print(f"\nSolving puzzle using {algorithm.value} {heuristic_function_type.__name__} heuristics:")
+        res_path, count = self.search_algorithm(algorithm, heuristic_function_type)
+        row, col = get_average_steps_position()
+        if res_path:
+            res_path.reverse()
+            for i in res_path:
+                print(i.dup_matrix)
+            self.average_steps[row][col] = self.average_steps[row][col] + len(res_path)
+            print(f"\nNo.of steps {heuristic_function_type.__name__} took for {algorithm.value} is {len(res_path)}")
+        else:
+            print(f"Searching stopped after traversing {count -1} solution paths")
+
+    def search_algorithm(self, algorithm, given_heuristic_function):
+        # Best First Search implementation
+        def check_is_solved(puzzle):
+            return puzzle.dup_matrix == self.puzzle_goal_state
+
+        given_input_matrix = [self]
+        intermediate_matrix = []
+        no_of_moves = 0
+        while len(given_input_matrix) > 0:
+            v = given_input_matrix.pop(0)
+            no_of_moves += 1
+
+            if no_of_moves > self.max_move_limit:
+                print("No solution for the given puzzle is found. Maximum move limit reached")
+                return [], no_of_moves
+            if check_is_solved(v):
+                if len(intermediate_matrix) > 0:
+                    return v.get_resultant_path([]), no_of_moves
+                else:
+                    return [v]
+            next_possible_position = v.create_position()
+            matrix_index_open = matrix_index_closed = -1
+            for move in next_possible_position:
+                matrix_index_open = self.get_index(move, given_input_matrix)
+                matrix_index_closed = self.get_index(move, intermediate_matrix)
+                heuristic_value = given_heuristic_function(move)
+                function_value = heuristic_value + move.depth if algorithm == SearchAlgorithm.ASTAR \
+                                    else heuristic_value
+                if matrix_index_closed == -1 and matrix_index_open == -1:
+                    move.heuristic_value = heuristic_value
+                    given_input_matrix.append(move)
+                elif matrix_index_open > -1:
+                    copy = given_input_matrix[matrix_index_open]
+                    copy_function_value = copy.heuristic_value + copy.depth if algorithm == SearchAlgorithm.ASTAR \
+                                            else copy.heuristic_value
+                    if function_value < copy_function_value:
+                        copy.heuristic_value = heuristic_value
+                        copy.intial_node = move.intial_node
+                        if algorithm == SearchAlgorithm.ASTAR:
+                            copy.depth = move.depth
+                elif matrix_index_closed > -1:
+                    copy = intermediate_matrix[matrix_index_closed]
+                    copy_function_value = copy.heuristic_value + copy.depth if algorithm == SearchAlgorithm.ASTAR \
+                                            else copy.heuristic_value
+                    if function_value < copy_function_value:
+                        move.heuristic_value = heuristic_value
+                        intermediate_matrix.remove(copy)
+                        given_input_matrix.append(move)
+            intermediate_matrix.append(v)
+            given_input_matrix = sorted(given_input_matrix, key=lambda p: p.heuristic_value + p.depth)  \
+                                if algorithm == SearchAlgorithm.ASTAR else sorted(given_input_matrix, key=lambda p: p.heuristic_value)
+        return [], no_of_moves
 
 class HeuristicFunction(Enum):
     EUCLIDEAN_DISTANCE = PuzzleBoardProblem.euclidean_distance
