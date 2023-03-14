@@ -106,6 +106,44 @@ def get_astar_euclidean_distance_average_steps_position():
 def get_astar_misplaced_tiles_average_steps_position():
     return 0, 2
 
+def solve_puzzle(puzzle_board, algorithm, heuristic_fn=None):
+    def print_solution(res_path):
+        res_path.reverse()
+        for i in res_path:
+            print(i.dup_matrix)
+        return len(res_path)
+    
+    def print_no_solution(count):
+        print(f"Searching stopped after traversing {count-1} solution paths")
+
+    def get_average_steps_position(row, col, steps):
+        average_steps[row][col] += steps
+
+    if algorithm == 'astar':
+        heuristic_fn_name = heuristic_fn.__name__
+        print(f"\nSolving puzzle using astar {heuristic_fn_name} heuristics:")
+        res_path, count = puzzle_board.astar(heuristic_fn)
+        if res_path:
+            steps = print_solution(res_path)
+            get_average_steps_position(0, 2, steps)
+            get_average_steps_position(heuristic_fn.row, heuristic_fn.col, steps)
+            print(f"\nNo.of steps {heuristic_fn_name} took for astar algorithm is {steps}")
+        else:
+            print_no_solution(count)
+
+    elif algorithm == 'best_first':
+        print("\nSolving puzzle using Best first search Manhattan distance heuristics:")
+        res_path, count = puzzle_board.best_first_search(manhattan_distance)
+        if res_path:
+            steps = print_solution(res_path)
+            get_average_steps_position(0, 0, steps)
+            print(f"\nNo.of steps manhattan distance took for best first algorithm is {steps}")
+        else:
+            print_no_solution(count)
+
+    else:
+        raise ValueError(f"Unknown algorithm: {algorithm}")
+
 def best_first_search_algorithm(puzzle_board, heuristic_function_type, get_average_steps_position):
     # Solving puzzle using Best first search
     print(f"\nSolving puzzle using Best first search {heuristic_function_type.__name__} heuristics:")
