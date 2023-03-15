@@ -1,3 +1,6 @@
+"""
+Solving 8 puzzle problem by inheriting n puzzle solver class
+"""
 from n_puzzle_solver import (PuzzleBoardProblem, 
                              HeuristicFunction,
                              SearchAlgorithm,
